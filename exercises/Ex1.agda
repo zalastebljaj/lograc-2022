@@ -203,10 +203,13 @@ b-incr (b I) = (b-incr b) O
 -}
 
 to : ℕ → Bin
-to n = {!!}
+to zero = ⟨⟩ O
+to (suc n) = b-incr (to n)
 
 from : Bin → ℕ
-from b = {!!}
+from ⟨⟩ = 0
+from (b O) = 2 * from b
+from (b I) = 1 + 2 * from b
 
 
 ----------------
