@@ -147,7 +147,8 @@ infixl 7  _*_
 -}
 
 _^_ : ℕ → ℕ → ℕ
-m ^ n = {!!}
+m ^ zero = 1
+m ^ suc n = m * m ^ n
 
 infixl 8  _^_
 
