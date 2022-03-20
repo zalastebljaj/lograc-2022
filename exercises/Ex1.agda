@@ -229,6 +229,7 @@ data Even : ℕ → Set where
 -}
 
 data Even₂ : Bin → Set where
+   even₂ : {b : Bin} -> Even₂ (b O)
   {- EXERCISE: add the constructors for this inductive predicate here -}
 
 
@@ -242,7 +243,12 @@ data Even₂ : Bin → Set where
 -}
 
 to-even : {n : ℕ} → Even n → Even₂ (to n)
-to-even p = {!!}
+to-even even-z = even₂
+to-even (even-ss p) = b-incr-incr-even (to-even p)
+
+      where
+         b-incr-incr-even : {b : Bin} → Even₂ b → Even₂( b-incr (b-incr b))
+         b-incr-incr-even even₂ = even₂
 
 
 ----------------
@@ -263,6 +269,8 @@ to-even p = {!!}
 -}
 
 data NonEmptyBin : Bin → Set where
+   neO : {b : Bin} → NonEmptyBin (b O)
+   neI : {b : Bin} → NonEmptyBin (b I)
   {- EXERCISE: add the constructors for this inductive predicate here -}
 
 {-
@@ -274,7 +282,7 @@ data NonEmptyBin : Bin → Set where
 data ⊥ : Set where
 
 ⟨⟩-empty : NonEmptyBin ⟨⟩ → ⊥
-⟨⟩-empty p = {!!}
+⟨⟩-empty () 
 
 
 ----------------
@@ -291,7 +299,13 @@ data ⊥ : Set where
 -}
 
 from-ne : (b : Bin) → NonEmptyBin b → ℕ
-from-ne b p = {!!}
+from-ne ⟨⟩ ()
+from-ne (⟨⟩ O) neO = zero
+from-ne (b O O) neO = 2 * from-ne (b O) neO
+from-ne (b I O) neO = 2 * from-ne (b I) neI
+from-ne (⟨⟩ I) neI = suc zero
+from-ne (b O I) neI = 1 + 2 * (from-ne (b O) neO)
+from-ne (b I I) neI = 1 + 2 * from-ne (b I) neI
 
 
 -----------------
@@ -324,7 +338,8 @@ infixr 5 _∷_
 -}
 
 map : {A B : Set} → (A → B) → List A → List B
-map f xs = {!!}
+map f [] = []
+map f (x ∷ xs) = f x ∷ map f xs
 
 
 -----------------
@@ -336,7 +351,8 @@ map f xs = {!!}
 -}
 
 length : {A : Set} → List A → ℕ
-length xs = {!!}
+length [] = zero
+length (x ∷ xs) = 1 + length xs
 
 -----------------
 -- Exercise 12 --
@@ -357,7 +373,8 @@ data _≡ᴺ_ : ℕ → ℕ → Set where
 -}
 
 map-≡ᴺ : {A B : Set} {f : A → B} → (xs : List A) → length xs ≡ᴺ length (map f xs)
-map-≡ᴺ xs = {!!}
+map-≡ᴺ [] = z≡ᴺz
+map-≡ᴺ (x ∷ xs) = s≡ᴺs (map-≡ᴺ xs)
 
 
 -----------------
@@ -381,6 +398,8 @@ infix 4 _≤_
 -}
 
 data _≤ᴸ_ {A : Set} : List A → List A → Set where
+   []≤ᴸxs : {xs : List A} → [] ≤ᴸ xs
+   yys≤ᴸxxs : {y x : A} {ys xs : List A} → ys ≤ᴸ xs → y ∷ ys ≤ᴸ x ∷ xs
   {- EXERCISE: add the constructors for this inductive relation here -}
 
 infix 4 _≤ᴸ_
@@ -396,10 +415,12 @@ infix 4 _≤ᴸ_
 -}
 
 length-≤ᴸ-≦ : {A : Set} {xs ys : List A} → xs ≤ᴸ ys → length xs ≤ length ys
-length-≤ᴸ-≦ p = {!!}
+length-≤ᴸ-≦ []≤ᴸxs = z≤n
+length-≤ᴸ-≦ (yys≤ᴸxxs p) = s≤s (length-≤ᴸ-≦ p)
 
 length-≤-≦ᴸ : {A : Set} (xs ys : List A) → length xs ≤ length ys → xs ≤ᴸ ys
-length-≤-≦ᴸ xs ys p = {!!}
+length-≤-≦ᴸ [] _ z≤n = []≤ᴸxs
+length-≤-≦ᴸ (x ∷ xs) (x₁ ∷ ys) (s≤s p) = yys≤ᴸxxs (length-≤-≦ᴸ xs ys p)
 
 
 -----------------
@@ -416,3 +437,4 @@ length-≤-≦ᴸ xs ys p = {!!}
    - "less than or equal" order
    - show that `from` takes even numbers to even numbers
 -}
+ 
