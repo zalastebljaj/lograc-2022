@@ -101,13 +101,46 @@ postulate
 -}
 
 +-identityʳ : (n : ℕ) → n + zero ≡ n
-+-identityʳ n = {!!}
++-identityʳ zero = 
+   (begin 
+      zero + zero 
+   ≡⟨⟩ 
+      zero
+   ∎)
++-identityʳ (suc n) =
+   begin
+      suc n + zero
+   ≡⟨ cong suc (+-identityʳ n) ⟩
+      suc n
+   ∎
 
 +-identityˡ : (n : ℕ) → zero + n ≡ n
-+-identityˡ n = {!!}
++-identityˡ zero = 
+   begin 
+      zero + zero 
+   ≡⟨⟩ 
+      zero
+   ∎
++-identityˡ (suc n) =
+   begin 
+      zero + suc n
+   ≡⟨ cong suc (+-identityˡ n) ⟩ 
+      suc n
+   ∎
 
 +-suc : (n m : ℕ) → n + (suc m) ≡ suc (n + m)
-+-suc n m = {!!}
++-suc zero m = 
+   begin
+      zero + suc m
+   ≡⟨⟩
+      suc ( zero + m)
+   ∎
++-suc (suc n) m = 
+   begin 
+      suc (n + suc m)
+   ≡⟨ cong suc (+-suc n m) ⟩
+      suc (suc n + m)
+   ∎
 
 
 ----------------
@@ -141,7 +174,9 @@ data Maybe (A : Set) : Set where
   nothing : Maybe A
 
 lookup : {A : Set} {n : ℕ} → Vec A n → ℕ → Maybe A
-lookup xs i = {!!}
+lookup [] _ = nothing
+lookup (x ∷ xs) zero = just x
+lookup (x ∷ xs) (suc i) = lookup xs i
 
 
 ----------------
@@ -179,7 +214,20 @@ lookup-totalᵀ : {n : ℕ}
               → i < n                           -- `i` in `{0,1,...,n-1}`
               → lookup xs i ≡ just ⋆
              
-lookup-totalᵀ xs i p = {!!}
+lookup-totalᵀ (⋆ ∷ xs) zero (s≤s p) =
+   begin
+      lookup (⋆ ∷ xs) zero
+   ≡⟨⟩
+      just ⋆
+   ∎
+lookup-totalᵀ (⋆ ∷ xs) (suc i) (s≤s p) =
+   begin
+      lookup (⋆ ∷ xs) (suc i)
+   ≡⟨⟩
+      lookup xs i
+   ≡⟨ lookup-totalᵀ xs i p ⟩
+      just ⋆
+   ∎
 
 {-
    Note: In the standard library, `⊤` is defined as a record type. Here
@@ -218,7 +266,9 @@ data Fin : ℕ → Set where
   suc  : {n : ℕ} (i : Fin n) → Fin (suc n)
 
 safe-lookup : {A : Set} {n : ℕ} → Vec A n → Fin n → A
-safe-lookup xs i = {!!}
+safe-lookup [] ()
+safe-lookup (x ∷ xs) zero = x
+safe-lookup (x ∷ xs) (suc i) = safe-lookup xs i
 
 
 ----------------
@@ -238,8 +288,9 @@ safe-lookup xs i = {!!}
    the correct type, the yellow highlighting below will disappear.
 -}
 
-nat-to-fin : {!!}
-nat-to-fin = {!!}
+nat-to-fin : {n : ℕ} → (i : ℕ) → i < n → Fin n
+nat-to-fin zero (s≤s p) = zero
+nat-to-fin (suc i) (s≤s p) = suc (nat-to-fin i p)
 
 lookup-correct : {A : Set} {n : ℕ}
                → (xs : Vec A n)
@@ -247,7 +298,25 @@ lookup-correct : {A : Set} {n : ℕ}
                → (p : i < n)
                → lookup xs i ≡ just (safe-lookup xs (nat-to-fin i p))
 
-lookup-correct x i p = {!!}
+lookup-correct [] _ ()
+lookup-correct (x ∷ xs) zero (s≤s p) =
+   begin
+      lookup (x ∷ xs) zero
+   ≡⟨⟩
+      just x
+   ≡⟨⟩
+      just (safe-lookup (x ∷ xs) (nat-to-fin zero (s≤s p)))
+   ∎
+lookup-correct (x ∷ xs) (suc i) (s≤s p) =
+   begin
+      lookup (x ∷ xs) (suc i)
+   ≡⟨⟩
+      lookup xs i
+   ≡⟨ lookup-correct xs i p ⟩
+      just (safe-lookup xs (nat-to-fin i p))
+   ≡⟨⟩
+      just (safe-lookup ((x ∷ xs)) (nat-to-fin (suc i) ((s≤s p))))
+   ∎
 
 
 ----------------
@@ -287,7 +356,8 @@ take-n' xs = {!!}
 -}
 
 vec-list : {A : Set} {n : ℕ} → Vec A n → List A
-vec-list xs = {!!}
+vec-list [] = []
+vec-list (x ∷ xs) = x ∷ vec-list xs
 
 {-
    Define a function from lists to vectors that is identity on the
@@ -297,8 +367,9 @@ vec-list xs = {!!}
    natural number specifying the length of the returned vector.
 -}
 
-list-vec : {A : Set} → (xs : List A) → Vec A {!!}
-list-vec xs = {!!}
+list-vec : {A : Set} → (xs : List A) → Vec A (length xs)
+list-vec [] = []
+list-vec (x ∷ xs) = x ∷ list-vec xs
 
 
 ----------------
@@ -314,7 +385,20 @@ vec-list-length : {A : Set} {n : ℕ}
                 → (xs : Vec A n)
                 → n ≡ length (vec-list xs)
                 
-vec-list-length xs = {!!}
+vec-list-length {A} [] = 
+   begin 
+      zero
+   ≡⟨⟩
+      length (vec-list ([] {A}))
+   ∎
+vec-list-length {n = suc n} (x ∷ xs) = 
+   begin
+      suc n
+   ≡⟨ cong suc (vec-list-length xs) ⟩
+      suc (length (vec-list (xs)))
+   ≡⟨⟩
+      length (vec-list (x ∷ xs))
+   ∎
 
 
 ----------------
@@ -343,8 +427,15 @@ Matrix A m n = Vec (Vec A n) m
    of two vectors of the same length.
 -}
 
+private
+   _+ⱽ_ : {n : ℕ} → Vec ℕ n → Vec ℕ n → Vec ℕ n
+   [] +ⱽ [] = []
+   (x ∷ xs) +ⱽ (y ∷ ys) = (x + y) ∷ (xs +ⱽ ys)
+
+
 _+ᴹ_ : {m n : ℕ} → Matrix ℕ m n → Matrix ℕ m n → Matrix ℕ m n
-xss +ᴹ yss = {!!}
+[] +ᴹ [] = []
+(xs ∷ xss) +ᴹ (ys ∷ yss) = (xs +ⱽ ys) ∷ (xss +ᴹ yss)
 
 
 -----------------------------
@@ -389,8 +480,24 @@ list-vec-list = {!!}
    in terms of the transpose of the submatrix without the first row.
 -}
 
+private
+   populate : {A : Set} {n : ℕ} → A → Vec A n
+   populate {n = zero} x = []
+   populate {n = suc n} x = x ∷ (populate x)
+
+-- private
+--    tran : {A : Set} {m n : ℕ} → Vec A m → Matrix A m n → Matrix A m (suc n)
+--    tran [] [] = []
+--    tran (y ∷ ys) (xs ∷ xss) = {! (y ∷ xs) ∷ (tran ys xss) !}
+
+
 transpose : {A : Set} {m n : ℕ} → Matrix A m n → Matrix A n m
-transpose xss = {!!}
+transpose [] = populate []
+transpose (xs ∷ xss) = tran xs (transpose xss)
+   where
+      tran : {A : Set} {m n : ℕ} → Vec A m → Matrix A m n → Matrix A m (suc n)
+      tran [] [] = []
+      tran (y ∷ ys) (xs ∷ xss) = (y ∷ xs) ∷ (tran ys xss)
 
 
 -----------------
@@ -429,7 +536,15 @@ data _</≡/>_ (n m : ℕ) : Set where
 -}
 
 test-</≡/> : (n m : ℕ) → n </≡/> m
-test-</≡/> n m = {!!}
+test-</≡/> zero zero = n≡m refl
+test-</≡/> zero (suc m) = n<m (s≤s z≤n)
+test-</≡/> (suc n) zero = n>m (s≤s z≤n)
+test-</≡/> (suc n) (suc m) = test-suc (test-</≡/> n m)
+   where
+      test-suc : {n m : ℕ} → n </≡/> m → suc n </≡/> suc m
+      test-suc (n<m x) = n<m (s≤s x)
+      test-suc (n≡m x) = n≡m (cong suc x)
+      test-suc (n>m x) = n>m (s≤s x)
 
 
 -----------------
@@ -483,7 +598,11 @@ data Tree (A : Set) : Set where
 -}
 
 insert : Tree ℕ → ℕ → Tree ℕ
-insert t n = {!!}
+insert empty n = node empty n empty
+insert (node l m r) n with (test-</≡/> n m)
+... | n<m p = node (insert l n) m r 
+... | n≡m p = node l n r
+... | n>m p = node l m (insert r n)
 
 {-
    As a sanity check, prove that inserting 12, 27, and 52 into the above
@@ -493,17 +612,23 @@ insert t n = {!!}
 insert-12 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 12
             ≡
             node (node (node empty 12 empty) 22 (node empty 32 empty)) 42 (node empty 52 empty)
-insert-12 = {!!}
+insert-12 = 
+   begin
+      insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 12
+   ≡⟨⟩
+      node (node (node empty 12 empty) 22 (node empty 32 empty)) 42 (node empty 52 empty)
+   ∎
+
 
 insert-27 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 27
             ≡
             node (node empty 22 (node (node empty 27 empty) 32 empty)) 42 (node empty 52 empty)
-insert-27 = {!!}            
+insert-27 = refl            
 
 insert-52 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 52
             ≡
             node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)
-insert-52 = {!!}
+insert-52 = refl
 
 
 -----------------
@@ -519,6 +644,9 @@ insert-52 = {!!}
 -}
 
 data _∈_ (n : ℕ) : Tree ℕ → Set where
+   here : {l r : Tree ℕ} → n ∈ node l n r 
+   left : {l r : Tree ℕ} {x : ℕ} → n ∈ l → n ∈ node l x r
+   right : {l r : Tree ℕ} {x : ℕ} → n ∈ r → n ∈ node l x r
   {- EXERCISE: the constructors for the `∈` relation go here -}
 
 
@@ -539,7 +667,13 @@ data _∈_ (n : ℕ) : Tree ℕ → Set where
 -}
 
 insert-∈ : (t : Tree ℕ) → (n : ℕ) → n ∈ (insert t n)
-insert-∈ t n = {!!}
+insert-∈ empty n = here
+insert-∈ (node l x r) n with (test-</≡/> n x)
+... | n<m p = left (insert-∈ l n)
+... | n≡m p = here
+... | n>m p = right (insert-∈ r n)
+
+
 
 
 -----------------------------------
@@ -724,3 +858,4 @@ vec-list-vec = {!!}
 -----------------------------------
 -----------------------------------
 
+ 
