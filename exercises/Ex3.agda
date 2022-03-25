@@ -68,7 +68,8 @@ postulate fun-ext : ∀ {a b} → Extensionality a b
 -}
 
 take-n : {A : Set} {n m : ℕ} → Vec A (n + m) → Vec A n
-take-n xs = {!!}
+take-n {n = zero} xs = []
+take-n {n = suc n} (x ∷ xs) = x ∷ take-n xs
 
 {-
    Now define a function that extracts the first `n` elements from a
@@ -82,7 +83,7 @@ take-n xs = {!!}
 -}
 
 take-n' : {A : Set} {n m : ℕ} → Vec A (m + n) → Vec A n
-take-n' xs = {!!}
+take-n' {A} {n} {m} xs = take-n (subst (Vec A) (+-comm m n) xs)
 
 
 ----------------
@@ -117,7 +118,22 @@ list-vec (x ∷ xs) = x ∷ list-vec xs
 list-vec-list : {A : Set}
               → vec-list ∘ list-vec ≡ id {A = List A}
 
-list-vec-list = {!!}
+list-vec-list {A} = fun-ext list-vec-list-pom
+   where
+      list-vec-list-pom : (xs : List A) → vec-list ( list-vec xs ) ≡ xs
+      list-vec-list-pom [] =
+         begin
+            vec-list (list-vec []) ≡⟨⟩
+            vec-list [] ≡⟨⟩
+            []
+         ∎
+      list-vec-list-pom (x ∷ xs) =
+         begin
+            vec-list (list-vec (x ∷ xs)) ≡⟨⟩
+            vec-list (x ∷ list-vec xs) ≡⟨⟩
+            x ∷ vec-list (list-vec xs) ≡⟨ cong (x ∷_) (list-vec-list-pom xs) ⟩
+            x ∷ xs
+         ∎
 
 {-
    Note: The dual lemma, showing that `list-vec` is the left inverse
@@ -155,7 +171,9 @@ lookup-total-Σ : {A : Set} {n : ℕ}
                → i < n
                → Σ[ x ∈ A ] (lookup xs i ≡ just x)
 
-lookup-total-Σ xs i p = {!!}
+lookup-total-Σ [] _ ()
+lookup-total-Σ (x ∷ xs) zero (s≤s p) = x , refl
+lookup-total-Σ (x ∷ xs) (suc i) (s≤s p) = lookup-total-Σ xs i p
 
 
 ----------------
@@ -173,7 +191,9 @@ lookup-total-Σ xs i p = {!!}
 -}
 
 vec-list-Σ : {A : Set} {n : ℕ} → Vec A n → Σ[ xs ∈ List A ] (length xs ≡ n)
-vec-list-Σ xs = {!!}
+vec-list-Σ [] = [] , refl
+vec-list-Σ (x ∷ xs) with vec-list-Σ xs
+... | ys , refl = x ∷ ys , cong suc refl
 
 
 ----------------
@@ -199,7 +219,21 @@ list-ext : {A : Set} {xs ys : List A}
               → safe-list-lookup xs i p ≡ safe-list-lookup ys i q)
          → xs ≡ ys
 
-list-ext = {!!}
+list-ext {xs = []} {ys = []} d f = 
+   begin
+      [] ≡⟨⟩ 
+      []
+   ∎
+
+list-ext {xs = x ∷ xs} {ys = y ∷ ys} d f =
+   begin
+      x ∷ xs ≡⟨ cong (_∷ xs) (f zero (s≤s z≤n) (s≤s z≤n)) ⟩
+      y ∷ xs ≡⟨ cong (y ∷_) (list-ext (suc-obratno (length xs) (length ys) d) (λ i p q → f (suc i) (s≤s p) (s≤s q))) ⟩
+      y ∷ ys
+   ∎
+   where
+      suc-obratno : (n m : ℕ) → suc n ≡ suc m → n ≡ m
+      suc-obratno n .n refl = refl
 
 {-
    Notice that we have generalised this statement a bit compared
@@ -250,7 +284,11 @@ open _≃_
           ≃
           Σ[ xy ∈ Σ[ x ∈ A ] (B x) ] (C (proj₁ xy) (proj₂ xy))
         
-Σ-assoc = {!!}
+Σ-assoc = record {
+   to = λ (x , (y , z)) → (x , y) , z ;
+   from = λ ((x , y) , z ) → x , (y , z) ;
+   from∘to = λ (x , (y , z)) → refl ;
+   to∘from = λ ((x , y) , z ) → refl }
 
 {-
    Second, prove the same thing using copatterns. For a reference on copatterns,
@@ -262,7 +300,10 @@ open _≃_
           ≃
           Σ[ xy ∈ Σ[ x ∈ A ] (B x) ] (C (proj₁ xy) (proj₂ xy))
 
-Σ-assoc' = {!!}
+to (Σ-assoc') (x , (y , z)) = (x , y) , z
+from (Σ-assoc') ((x , y) , z ) = x , (y , z)
+from∘to (Σ-assoc') (x , (y , z)) = refl
+to∘from (Σ-assoc') ((x , y) , z ) = refl
 
 
 ----------------
@@ -277,7 +318,27 @@ open _≃_
 -}
 
 ≃-List : {A B : Set} → A ≃ B → List A ≃ List B
-≃-List = {!!}
+to (≃-List iso) = map (to iso)
+from (≃-List iso) = map (from iso)
+
+from∘to (≃-List iso) xs =
+   begin
+      from (≃-List iso) (to (≃-List iso) xs) ≡⟨⟩
+      map (from iso) (map(to iso) xs) ≡⟨ sym (map-compose (xs)) ⟩
+      map (from iso ∘ to iso) xs ≡⟨ cong (λ f → map f xs) (fun-ext ((from∘to) iso)) ⟩
+      map id xs ≡⟨ map-id (xs) ⟩
+      xs
+      ∎
+to∘from (≃-List iso) xs =
+   begin
+      to (≃-List iso) (from (≃-List iso) xs) ≡⟨⟩
+      map (to iso) (map (from iso) xs) ≡⟨ sym (map-compose xs) ⟩
+      map (to iso ∘ from iso) xs ≡⟨ cong (λ f → map f xs) (fun-ext (to∘from iso)) ⟩
+      map id xs ≡⟨ map-id xs ⟩
+      xs
+   ∎
+
+
 
 
 ----------------
@@ -462,3 +523,4 @@ open import Data.Nat.Properties
 
 from-bin-≡ : (b : Bin) → from-bin b ≡ from-bin' b
 from-bin-≡ b = {!!}
+    
