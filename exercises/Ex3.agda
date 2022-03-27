@@ -366,7 +366,21 @@ open DecSet
 -}
 
 DecList : (DS : DecSet) → Σ[ DS' ∈ DecSet ] (DSet DS' ≡ List (DSet DS))
-DecList DS = {!!}
+DecList DS = record {
+   DSet = List (DSet DS) ;
+   test-≡ = test-≡-list
+   } , 
+   refl
+   where
+      test-≡-list : (xs ys : List (DSet DS)) → Dec (xs ≡ ys)
+      test-≡-list [] [] = yes refl
+      test-≡-list [] (y ∷ ys) = no λ ()
+      test-≡-list (x ∷ xs) [] = no λ ()
+      test-≡-list (x ∷ xs) (y ∷ ys) with test-≡ DS x y
+      ... | no p = no λ {refl → p refl}
+      ... | yes refl with test-≡-list xs ys
+      ... | no p2 = no (λ {refl → p2 refl})
+      ... | yes refl = yes refl
 
 
 ----------------
@@ -436,6 +450,8 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-there : {x y : A} {xs : List A} → x ∈ xs → x ∈ (y ∷ xs)
 
 data NoDup {A : Set} : List A → Set where
+   []-nodup : NoDup []
+   ∷-nodup : {xs : List A} {x : A} → NoDup xs → ¬ (x ∈ xs) → NoDup (x ∷ xs)
   {- EXERCISE: replace this comment with constructors for `NoDup` -}
 
 {-
@@ -443,13 +459,13 @@ data NoDup {A : Set} : List A → Set where
 -}
 
 nodup-test₁ : NoDup {ℕ} []
-nodup-test₁ = {!!}
+nodup-test₁ = []-nodup
 
 nodup-test₂ : NoDup (4 ∷ 2 ∷ [])
-nodup-test₂ = {!!}
+nodup-test₂ = ∷-nodup (∷-nodup []-nodup λ ()) λ {(∈-there ())}
 
 nodup-test₃ : ¬ (NoDup (4 ∷ 2 ∷ 4 ∷ []))
-nodup-test₃ = {!!}
+nodup-test₃ (∷-nodup p r) = r (∈-there ∈-here)
 
 {-
    Finally, prove that `add` preserves the no-duplicates property.
@@ -523,4 +539,4 @@ open import Data.Nat.Properties
 
 from-bin-≡ : (b : Bin) → from-bin b ≡ from-bin' b
 from-bin-≡ b = {!!}
-    
+     
