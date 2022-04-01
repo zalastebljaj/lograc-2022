@@ -14,7 +14,7 @@
    `Ex4.Monad` before filling all the holes in this module.
 -}
 
--- {-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 {-
    This week's exercises are split between multiple modules.
@@ -137,7 +137,21 @@ g ∘ᴹ f = record {
 infixl 7 _×ᴹ_
 
 _×ᴹ_ : ∀ {l} → Monoid {l} → Monoid {l} → Monoid {l}
-Mon₁ ×ᴹ Mon₂ = {!!}
+
+Mon₁ ×ᴹ Mon₂ = record{
+   M = M₁ × M₂ ;
+   ε = ε₁ , ε₂ ;
+   _·_ = λ (x₁ , x₂) (y₁ , y₂) → (x₁ ·₁ y₁) , ( x₂ ·₂ y₂) ;
+   ε-left = λ (m₁ , m₂) → cong₂ _,_ (ε-left₁ m₁) (ε-left₂ m₂) ;
+   ε-right = λ (m₁ , m₂) → cong₂ _,_ (ε-right₁ m₁) (ε-right₂ m₂) ;
+   ·-assoc = λ (x₁ , x₂) (y₁ , y₂) (z₁ , z₂) → cong₂ _,_ (·-assoc₁ x₁ y₁ z₁) (·-assoc₂ x₂ y₂ z₂) }
+
+      where
+
+         open Monoid Mon₁ renaming (M to M₁; ε to ε₁; _·_ to _·₁_; ε-left to ε-left₁; 
+                             ε-right to ε-right₁; ·-assoc to ·-assoc₁)
+         open Monoid Mon₂ renaming (M to M₂; ε to ε₂; _·_ to _·₂_; ε-left to ε-left₂; 
+                                    ε-right to ε-right₂; ·-assoc to ·-assoc₂)
 
 {-
    Prove that your definition of `×ᴹ` is indeed the Cartesian product
@@ -149,27 +163,40 @@ Mon₁ ×ᴹ Mon₂ = {!!}
 -}
 
 fst : ∀ {l} {Mon₁ Mon₂ : Monoid {l}} → Mon₁ ×ᴹ Mon₂ →ᴹ Mon₁
-fst {l} {Mon₁} {Mon₂} = {!!}
+fst {l} {Mon₁} {Mon₂} = record {
+   map = proj₁ ;
+   map-ε = refl ;
+   map-· = λ (x₁ , x₂) (y₁ , y₂) → refl }
+
 
 snd : ∀ {l} {Mon₁ Mon₂ : Monoid {l}} → Mon₁ ×ᴹ Mon₂ →ᴹ Mon₂
-snd {l} {Mon₁} {Mon₂} = {!!}
+snd {l} {Mon₁} {Mon₂} = record {
+   map = proj₂ ;
+   map-ε = refl ;
+   map-· = λ (x₁ , x₂) (y₁ , y₂) → refl }
 
 ⟨_,_⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
       → Mon₁ →ᴹ Mon₂ → Mon₁ →ᴹ Mon₃ → Mon₁ →ᴹ Mon₂ ×ᴹ Mon₃
       
-⟨ f , g ⟩ = {!!}
+⟨ f , g ⟩ = record {
+   map = λ m → map₁ m , map₂ m ;
+   map-ε = cong₂ _,_ map-ε₁ map-ε₂ ;
+   map-· = λ m₁ m₂ → cong₂ _,_ (map-·₁ m₁ m₂) (map-·₂ m₁ m₂) }
+
+   where open _→ᴹ_ f renaming (map to map₁; map-ε to map-ε₁; map-· to map-·₁)
+         open _→ᴹ_ g renaming (map to map₂; map-ε to map-ε₂; map-· to map-·₂)
 
 fst∘⟨,⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
         → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
         → (fst ∘ᴹ ⟨ f , g ⟩) ≡ᴹ f
         
-fst∘⟨,⟩ = {!!}
+fst∘⟨,⟩ = refl
 
 snd∘⟨,⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
         → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
         → (snd ∘ᴹ ⟨ f , g ⟩) ≡ᴹ g
         
-snd∘⟨,⟩ = {!!}
+snd∘⟨,⟩ = refl
 
 ⟨,⟩-unique : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
            → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
@@ -178,7 +205,7 @@ snd∘⟨,⟩ = {!!}
            → (snd ∘ᴹ h) ≡ᴹ g
            → h ≡ᴹ ⟨ f , g ⟩
            
-⟨,⟩-unique p q = {!!}
+⟨,⟩-unique refl refl = refl
 
 
 -------------------------------------
@@ -211,3 +238,4 @@ uip refl refl = refl
 
 →ᴹ-ext :  ∀ {l} {Mon₁ Mon₂ : Monoid {l}} {f g : Mon₁ →ᴹ Mon₂} → f ≡ᴹ g → f ≡ g
 →ᴹ-ext = {!!}
+    
